@@ -48,6 +48,14 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 The server acts as a **caching proxy** for map tiles — every tile downloaded from the internet is automatically saved to `cache/` on disk, so it's never fetched twice.
 
+### GitHub Pages
+
+The `docs/` folder contains a static build of the app (`index.html`, `css/`, `js/`, `assets/`, and the compiled `vendor/three-tile` bundle) for hosting via GitHub Pages (Settings → Pages → Deploy from a branch → `/docs`).
+
+> **Note:** map/elevation tiles and the flight-plan list are normally served through `scripts/serve.js`'s caching proxy (`/tiles/...`, `/api/flightplans`), which only exists when running the Node dev server. On static hosting like GitHub Pages, those endpoints aren't available, so terrain tiles won't load — the UI, HUD, and aircraft model still render. Run the dev server locally for the full experience.
+
+To rebuild the static copy after changing `index.html`, `css/`, `js/`, or `assets/`, re-copy those into `docs/` (and rebuild `vendor/three-tile` per the section below if it changed).
+
 ### Development tools (optional)
 
 Install dev dependencies for linting and formatting:
