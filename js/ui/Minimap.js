@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { CONFIG, update, onChange } from '../utils/config.js';
 import Logger from '../utils/Logger.js';
+import { osmTileUrl } from '../geo/TileSourceConfig.js';
 
 import {
   TILE_SIZE,
@@ -308,7 +309,7 @@ export default class Minimap {
     this._pendingLoads.add(key);
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = `/tiles/osm/${z}/${x}/${y}.png`;
+    img.src = osmTileUrl(z, x, y);
     img.onload = () => {
       this._tileCache.set(key, img);
       this._pendingLoads.delete(key);

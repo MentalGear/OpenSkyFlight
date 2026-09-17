@@ -52,7 +52,12 @@ The server acts as a **caching proxy** for map tiles — every tile downloaded f
 
 The `docs/` folder contains a static build of the app (`index.html`, `css/`, `js/`, `assets/`, and the compiled `vendor/three-tile` bundle) for hosting via GitHub Pages (Settings → Pages → Deploy from a branch → `/docs`).
 
-> **Note:** map/elevation tiles and the flight-plan list are normally served through `scripts/serve.js`'s caching proxy (`/tiles/...`, `/api/flightplans`), which only exists when running the Node dev server. On static hosting like GitHub Pages, those endpoints aren't available, so terrain tiles won't load — the UI, HUD, and aircraft model still render. Run the dev server locally for the full experience.
+On `localhost`/`127.0.0.1`, tiles route through `scripts/serve.js`'s caching proxy (`/tiles/...`) as usual. On any other host — including GitHub Pages — `js/geo/TileSourceConfig.js` switches to fetching tile providers directly from the browser, since there's no server to proxy through there:
+
+- **Satellite** (Esri World Imagery) and **road map** (OpenStreetMap) both serve tiles with `Access-Control-Allow-Origin: *`, so they load directly with no changes needed.
+- **Elevation** is the one exception: AWS's Terrarium bucket (`elevation-tiles-prod`) has no CORS headers, so a browser on a different origin can't read it as a texture at all. Static hosting instead uses [TrailSplits](https://trailsplits.com/api)' free, no-key, CORS-enabled Terrain-RGB mirror of the Copernicus 30m DEM (capped at zoom 12, vs. zoom 15 for Terrarium locally) — attribute TrailSplits and OpenStreetMap contributors if you redistribute it further.
+
+The flight-plan list (`/api/flightplans`) is still dev-server-only and fails gracefully (logged, not fatal) on static hosting.
 
 To rebuild the static copy after changing `index.html`, `css/`, `js/`, or `assets/`, re-copy those into `docs/` (and rebuild `vendor/three-tile` per the section below if it changed).
 
