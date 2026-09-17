@@ -1,8 +1,10 @@
-// Fetches and decodes AWS Terrarium elevation tiles into Float32Array heightmaps
-// Source: https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png
-// Encoding: height = (R * 256 + G + B / 256) - 32768
+// Fetches and decodes elevation tiles into Float32Array heightmaps.
+// Source depends on TILE_SOURCES.demDataType (see TileSourceConfig.js):
+//  - 'terrarium-shader': AWS Terrarium, height = (R * 256 + G + B / 256) - 32768
+//  - 'terrain-rgb':      Mapbox Terrain-RGB, height = -10000 + ((R<<16)|(G<<8)|B) * 0.1
 
 import { acquireFetch, releaseFetch } from './fetchSemaphore.js';
+import { TILE_SOURCES } from './TileSourceConfig.js';
 import Logger from '../utils/Logger.js';
 export default class ElevationProvider {
   constructor() {
@@ -36,7 +38,10 @@ export default class ElevationProvider {
       // Check cache again — another request may have populated it while queued
       if (this._cache.has(key)) return this._cache.get(key);
 
-      const url = `tiles/terrarium/${zoom}/${tileX}/${tileY}.png`;
+      const url = TILE_SOURCES.demUrl
+        .replace('{z}', zoom)
+        .replace('{x}', tileX)
+        .replace('{y}', tileY);
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Tile fetch failed (${response.status}): ${url}`);
       const blob = await response.blob();
@@ -49,6 +54,7 @@ export default class ElevationProvider {
       const imageData = this._ctx.getImageData(0, 0, 256, 256);
       const pixels = imageData.data;
 
+      const isMapboxRGB = TILE_SOURCES.demDataType === 'terrain-rgb';
       const heightmap = new Float32Array(256 * 256);
       let min = Infinity,
         max = -Infinity;
@@ -57,7 +63,9 @@ export default class ElevationProvider {
         const r = pixels[p];
         const g = pixels[p + 1];
         const b = pixels[p + 2];
-        const h = r * 256 + g + b / 256 - 32768;
+        const h = isMapboxRGB
+          ? -10000 + ((r << 16) | (g << 8) | b) * 0.1
+          : r * 256 + g + b / 256 - 32768;
         heightmap[i] = h;
         if (h < min) min = h;
         if (h > max) max = h;

@@ -121,6 +121,8 @@ npm run build:lib
 
 This produces `vendor/three-tile/packages/lib/dist/three-tile-osf.js`, which the app imports via import map — no other change needed.
 
+`vendor/three/` is an unmodified copy of the upstream `three` npm package (just the WebGPU build, TSL module, and the few `examples/jsm/` addons the app uses), needed because unpkg/jsdelivr CDN module loads can be blocked by browser privacy settings or network policy on some deployments. To update it, install `three@<version>` somewhere and copy `build/three.webgpu.js`, `build/three.core.js`, `build/three.tsl.js`, and the addon files referenced in `index.html`'s import map into `vendor/three/`, matching the existing layout.
+
 ## Real-World Mode
 
 Enter coordinates (or search a place name) in the control panel, then click **Load Terrain**. The app fetches elevation data from AWS Terrarium and overlays one of four texture modes, switchable at runtime with `T` or the control panel.
@@ -196,11 +198,11 @@ cache/
 
 ## Technologies
 
-- [Three.js](https://threejs.org/) v0.183 (WebGPU build) — 3D rendering with TSL shaders (loaded via CDN, no install)
+- [Three.js](https://threejs.org/) v0.183 (WebGPU build) — 3D rendering with TSL shaders, vendored in `vendor/three/` (no CDN, no install)
 - [three-tile](https://github.com/sxguojf/three-tile) (0.11.8-osf) — geographic tile management with patched concentric LOD
 - Canvas 2D — HUD instrument overlay, hi-res badge, and minimap
 - [three/examples — Sky](https://threejs.org/examples/?q=sky#webgl_shaders_sky) — procedural atmospheric sky and sun
-- [AWS Terrarium Tiles](https://registry.opendata.aws/terrain-tiles/) — elevation data (zoom 0–15, upsampled to 18 in hi-res mode)
+- [AWS Terrarium Tiles](https://registry.opendata.aws/terrain-tiles/) — elevation data on `localhost` (zoom 0–15, upsampled to 18 in hi-res mode); [TrailSplits Terrain-RGB](https://trailsplits.com/api) (Copernicus 30m DEM, zoom 0–12) elsewhere, since Terrarium's bucket has no CORS headers — see [GitHub Pages](#github-pages) above
 - [OpenStreetMap](https://www.openstreetmap.org/) — road map textures
 - [ESRI World Imagery](https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9) — satellite imagery (up to zoom 18+)
 - Node.js — dev server with transparent caching tile proxy and offline prefetch script
